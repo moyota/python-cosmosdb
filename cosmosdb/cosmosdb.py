@@ -58,18 +58,18 @@ class DatabaseConnection():
                     ],
                     "kind": "Hash",
                 },
-                "uniqueKeyPolicy": {
-                    "uniqueKeys": [{
-                        "paths": [
-                            "/name",
-                        ]
-                    },
-                    {
-                        "paths": [
-                            "/users/title"
-                        ]}
-                    ]
-                }
+                # "uniqueKeyPolicy": { #ユニークキーポリシー、動作未確認のため保留
+                #     "uniqueKeys": [{
+                #         "paths": [
+                #             "/name",
+                #         ]
+                #     },
+                #     {
+                #         "paths": [
+                #             "/users/title"
+                #         ]}
+                #     ]
+                # }
             }
             return self.client.CreateContainer(database_link, container_definition, {'offerThroughput': 400})
         except errors.CosmosError as e:
@@ -129,6 +129,21 @@ class DatabaseConnection():
             result = self.client.UpsertItem(self.container_link, item, self.get_options())
             logger.info(result)
             return result
+        except errors.HTTPFailure as e:
+            if e.status_code == 404:
+                print('A collection with id \'{0}\' does not exist'.format(self.container_link))
+            else:
+                raise errors.HTTPFailure(e.status_code)
+        except Exception as e:
+            raise e
+
+
+    def read_item(self, id):
+        query = {'query': 'SELECT * FROM c WHERE c.id = "{0}"'.format(id)}
+
+        try:
+            results = list(self.client.QueryItems(self.container_link, query, self.get_options()))
+            return results
         except errors.HTTPFailure as e:
             if e.status_code == 404:
                 print('A collection with id \'{0}\' does not exist'.format(self.container_link))
