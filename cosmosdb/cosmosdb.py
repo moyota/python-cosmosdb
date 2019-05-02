@@ -1,6 +1,6 @@
 import azure.cosmos.cosmos_client as cosmos_client
 import azure.cosmos.errors as errors
-from cosmosdb.config import config
+from .config import config
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -57,6 +57,18 @@ class DatabaseConnection():
                       "/partitionKey"
                     ],
                     "kind": "Hash",
+                },
+                "uniqueKeyPolicy": {
+                    "uniqueKeys": [{
+                        "paths": [
+                            "/name",
+                        ]
+                    },
+                    {
+                        "paths": [
+                            "/users/title"
+                        ]}
+                    ]
                 }
             }
             return self.client.CreateContainer(database_link, container_definition, {'offerThroughput': 400})
