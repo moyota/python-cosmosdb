@@ -51,6 +51,24 @@ class DatabaseConnection():
                 "indexingPolicy": {
                     "indexingMode": "consistent", # consistent or lazy
                     "automatic": True,
+                    "includedPaths": [{
+                        "path": "/*",
+                        "indexes": [{
+                            "kind": "Range",
+                            "dataType": "Number",
+                            "precision": -1
+                        },{
+                            "kind": "Range",
+                            "dataType": "String",
+                            "precision": -1
+                        },{
+                            "kind": "Spatial",
+                            "dataType": "Point"
+                        }
+                    ]}],
+                    "excludedPaths": [{
+                        "path": "/\"_etag\"/?"
+                    }]
                 },
                 "partitionKey": {
                     "paths": [
@@ -58,18 +76,18 @@ class DatabaseConnection():
                     ],
                     "kind": "Hash",
                 },
-                # "uniqueKeyPolicy": { #ユニークキーポリシー、動作未確認のため保留
-                #     "uniqueKeys": [{
-                #         "paths": [
-                #             "/name",
-                #         ]
-                #     },
-                #     {
-                #         "paths": [
-                #             "/users/title"
-                #         ]}
-                #     ]
-                # }
+                "uniqueKeyPolicy": {
+                    "uniqueKeys": [{
+                        "paths": [
+                            "/partitionKey",
+                            "/mailaddr",
+                        ]}
+                        # ,{
+                        # "paths": [
+                        #     "/testaddr"
+                        # ]}
+                    ]
+                }
             }
             return self.client.CreateContainer(database_link, container_definition, {'offerThroughput': 400})
         except errors.CosmosError as e:
@@ -176,6 +194,8 @@ def getReplacedItem(id):
     return {
         'id': 'id{0}'.format(id),
         'partitionKey': id,
+        'mailaddr': 'test{0}@xxx'.format(id),
+        'testaddr' : 'test{0}@xxx'.format(id),
         'message': 'Hello World CosmosDB!',
         'addition': 'test replace {0}'.format(id),
     }
@@ -184,5 +204,7 @@ def getItem(id):
     return {
         'id': 'id{0}'.format(id),
         'partitionKey': id,
+        'mailaddr': 'test{0}@xxx'.format(id),
+        'testaddr' : 'test{0}@xxx'.format(id),
         'message': 'Hello World CosmosDB!',
     }
